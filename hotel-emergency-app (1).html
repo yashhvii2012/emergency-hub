@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Emergency System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <!-- Three.js and GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0a0b0c;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #2a2c2e;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3a3c3e;
+    }
+
+    :root {
+      --bg-page: #04000a;
+      --bg-surface: #100606;
+      --bg-card: #110505;
+      --bg-input: #141516;
+      --border: #1e2022;
+      --border-hi: #2e3235;
+      --text-1: #d4d8de;
+      --text-2: #6b7280;
+      --text-3: #363b42;
+      --accent: #c8ced6;
+      --accent-hi: #e8ecf0;
+      --danger: #e03030;
+      --danger-hi: #ff4444;
+      --danger-bg: #2a1010;
+      --success: #38a169;
+      --warn: #d69e2e;
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-1);
+      min-height: 100vh;
+      font-size: 15px;
+    }
+
+    /* 3D Background Overlay */
+    #radial-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(circle at center, transparent 0%, rgba(4, 0, 10, 0.8) 100%);
+      pointer-events: none;
+    }
+
+    #three-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .topbar-title,
+    .login-logo h1,
+    .form-section h3,
+    .section-hdr h2,
+    .stat-num,
+    .ec-badge,
+    .panic-label {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    button,
+    a,
+    input,
+    textarea,
+    select,
+    .role-card,
+    .quick-btn,
+    .ec {
+      transition: all 0.2s ease;
+    }
+
+    button,
+    a,
+    .role-card {
+      cursor: pointer;
+    }
+
+    /* ── SCREEN SYSTEM ── */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen-exit {
+      animation: screenExit 0.15s forwards;
+    }
+
+    .screen-enter {
+      animation: screenEnter 0.2s forwards;
+    }
+
+    @keyframes screenExit {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+      }
+    }
+
+    @keyframes screenEnter {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .blob {
+      position: absolute;
+      filter: blur(80px);
+      border-radius: 50%;
+      opacity: 0.06;
+      pointer-events: none;
+      z-index: 0;
+      animation-timing-function: ease-in-out;
+      animation-direction: alternate;
+      animation-iteration-count: infinite;
+    }
+
+    .blob1 {
+      width: 200px;
+      height: 200px;
+      background: #c8ced6;
+      top: 10%;
+      left: 10%;
+      animation-name: morphBlob1;
+      animation-duration: 8s;
+    }
+
+    .blob2 {
+      width: 160px;
+      height: 160px;
+      background: #cc3333;
+      bottom: 10%;
+      right: 10%;
+      animation-name: morphBlob2;
+      animation-duration: 8s;
+      animation-delay: 4s;
+    }
+
+    .blob3 {
+      width: 120px;
+      height: 120px;
+      background: #c8ced6;
+      top: 40%;
+      right: 20%;
+      animation-name: morphBlob3;
+      animation-duration: 6s;
+    }
+
+    @keyframes morphBlob1 {
+      0% {
+        border-radius: 60% 40% 50% 50%;
+        transform: translate(0, 0);
+      }
+
+      100% {
+        border-radius: 40% 60% 45% 55%;
+        transform: translate(20px, -20px);
+      }
+    }
+
+    @keyframes morphBlob2 {
+      0% {
+        border-radius: 50% 50% 60% 40%;
+        transform: translate(0, 0);
+      }
+
+      100% {
+        border-radius: 45% 55% 40% 60%;
+        transform: translate(-20px, 20px);
+      }
+    }
+
+    @keyframes morphBlob3 {
+      0% {
+        border-radius: 40% 60% 50% 50%;
+        transform: translate(0, 0);
+      }
+
+      100% {
+        border-radius: 60% 40% 55% 45%;
+        transform: translate(15px, 15px);
+      }
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .topbar-sub {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .badge-guest {
+      background: #111214;
+      color: #9aa0aa;
+      border: 1px solid #2a2c2e;
+    }
+
+    .badge-staff {
+      background: #111214;
+      color: #7a9a7a;
+      border: 1px solid #2a2c2e;
+    }
+
+    .btn-logout {
+      font-size: 12px;
+      color: var(--text-2);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 6px;
+    }
+
+    .btn-logout:hover {
+      color: var(--text-1);
+      border-color: var(--border-hi);
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #login-screen {
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: transparent;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(12, 13, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      background-image: radial-gradient(circle at top right, rgba(255, 255, 255, 0.015) 0%, transparent 80%);
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-logo::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -150%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transform: skewX(-20deg);
+      animation: shimmer 3s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% {
+        left: -150%;
+      }
+
+      15% {
+        left: 200%;
+      }
+
+      100% {
+        left: 200%;
+      }
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #1a1c1e;
+      border: 1px solid #2a2c2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .login-logo h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .login-logo p {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 2px;
+    }
+
+    .login-label {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .role-card {
+      border: 1px solid #1a1c1e;
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      text-align: center;
+      background: #0f1011;
+      transition: all 0.25s ease;
+    }
+
+    .role-card:hover {
+      border-color: #c8ced6;
+    }
+
+    .role-card.selected {
+      border-color: #c8ced6;
+      background: #141618;
+    }
+
+    .role-card .role-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .role-card .role-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .role-card .role-desc {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    .input-wrap {
+      margin-bottom: 16px;
+    }
+
+    .input-wrap label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(200, 206, 214, 0.08), 0 0 12px rgba(200, 206, 214, 0.05);
+    }
+
+    .input-wrap input::placeholder {
+      color: var(--text-3);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      border-radius: var(--radius);
+      background: #c8ced6;
+      border: none;
+      color: #080909;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.5), transparent);
+      transition: none;
+    }
+
+    .btn-primary:hover {
+      background: #e8ecf0;
+      box-shadow: 0 0 20px rgba(200, 206, 214, 0.15);
+    }
+
+    .btn-primary:hover::after {
+      left: 100%;
+      transition: left 0.6s ease;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+      box-shadow: none;
+    }
+
+    .btn-primary:disabled {
+      background: #1e2022;
+      color: var(--text-3);
+      cursor: not-allowed;
+    }
+
+    .login-err {
+      font-size: 13px;
+      color: #fc5a5a;
+      margin-top: 10px;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    /* ── GUEST SCREEN ── */
+    #guest-screen {
+      background: transparent;
+    }
+
+    .guest-body {
+      flex: 1;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 520px;
+      margin: 0 auto;
+      width: 100%;
+      background: rgba(12, 13, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      border-radius: var(--radius-lg);
+    }
+
+    .panic-wrap {
+      text-align: center;
+      position: relative;
+      overflow: visible;
+    }
+
+    .panic-ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      width: 0px;
+      height: 0px;
+      background: radial-gradient(circle, rgba(204, 51, 51, 0.3) 0%, transparent 70%);
+      pointer-events: none;
+      animation: panicRipple 0.8s ease-out forwards;
+      z-index: 0;
+    }
+
+    @keyframes panicRipple {
+      0% {
+        width: 0px;
+        height: 0px;
+        opacity: 0.6;
+      }
+
+      100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+      }
+    }
+
+    .panic-label {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .panic-btn {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: var(--danger);
+      border: 2px solid #e04040;
+      animation: radiateRings 2s infinite linear;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      user-select: none;
+      position: relative;
+    }
+
+    @keyframes radiateRings {
+      0% {
+        box-shadow: 0 0 0 0 rgba(204, 51, 51, 0.15),
+          0 0 0 10px rgba(204, 51, 51, 0.08),
+          0 0 0 20px rgba(204, 51, 51, 0.03);
+      }
+
+      100% {
+        box-shadow: 0 0 0 15px rgba(204, 51, 51, 0),
+          0 0 0 30px rgba(204, 51, 51, 0),
+          0 0 0 45px rgba(204, 51, 51, 0);
+      }
+    }
+
+    .panic-btn .panic-icon {
+      font-size: 38px;
+      margin-bottom: 6px;
+      line-height: 1;
+      display: inline-block;
+      animation: heartbeat 1.8s infinite ease-in-out;
+    }
+
+    @keyframes heartbeat {
+      0% {
+        transform: scale(1);
+      }
+
+      15% {
+        transform: scale(1.15);
+      }
+
+      30% {
+        transform: scale(1);
+      }
+
+      45% {
+        transform: scale(1.15);
+      }
+
+      60% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .panic-btn:hover {
+      background: var(--danger-hi);
+      transform: scale(1.03);
+      border-color: #ff4444;
+    }
+
+    .panic-btn:active {
+      transform: scale(0.96);
+    }
+
+    .panic-btn.sending {
+      background: #8b1a1a;
+      border-color: #8b1a1a;
+      cursor: not-allowed;
+      animation: none;
+      box-shadow: none;
+    }
+
+    .panic-btn.max-alerts,
+    .panic-btn.cooldown {
+      background: #2a2a2a;
+      border-color: #333;
+      box-shadow: none;
+      cursor: not-allowed;
+      color: #555;
+      animation: none;
+    }
+
+    .panic-btn.max-alerts:hover,
+    .panic-btn.max-alerts:active,
+    .panic-btn.cooldown:hover,
+    .panic-btn.cooldown:active {
+      transform: none;
+      background: #2a2a2a;
+    }
+
+    .panic-limit-label {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 16px;
+      display: none;
+    }
+
+    .panic-limit-label.show {
+      display: block;
+    }
+
+    .form-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .form-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text-1);
+    }
+
+    .form-section textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 11px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-size: 14px;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+
+    .form-section textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(200, 206, 214, 0.08), 0 0 12px rgba(200, 206, 214, 0.05);
+    }
+
+    .form-section textarea::placeholder {
+      color: var(--text-3);
+    }
+
+    .quick-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .quick-btn {
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 100px;
+      border: 1px solid #1e2022;
+      background: #0f1011;
+      color: var(--text-2);
+      letter-spacing: 0.04em;
+    }
+
+    .quick-btn:hover {
+      border-color: #c8ced6;
+      color: #e8ecf0;
+      background: transparent;
+    }
+
+    .room-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .room-row label {
+      font-size: 13px;
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+
+    .room-row input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .room-row input:focus {
+      border-color: var(--accent);
+    }
+
+    .status-bar {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      display: none;
+    }
+
+    .status-bar.show {
+      display: block;
+    }
+
+    .status-bar.success {
+      background: #0d2a1a;
+      border: 1px solid #1a5a2a;
+      color: #6bcf7c;
+    }
+
+    .status-bar.error {
+      background: var(--danger-bg);
+      border: 1px solid #5a1a1a;
+      color: #fc5a5a;
+    }
+
+    .status-bar.loading {
+      background: #111828;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+    }
+
+    /* ── STAFF SCREEN ── */
+    #staff-screen {
+      background: transparent;
+    }
+
+    .staff-body {
+      flex: 1;
+      padding: 20px;
+      max-width: 700px;
+      margin: 0 auto;
+      width: 100%;
+      background: rgba(12, 13, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      border-radius: var(--radius-lg);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #0a0b0c;
+      border: 1px solid #1a1c1e;
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .stat-card:nth-child(1) {
+      border-top: 2px solid var(--danger);
+    }
+
+    .stat-card:nth-child(2) {
+      border-top: 2px solid #8a7040;
+    }
+
+    .stat-card:nth-child(3) {
+      border-top: 2px solid #3a6a4a;
+    }
+
+    .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-red {
+      color: var(--danger-hi);
+    }
+
+    .stat-yellow {
+      color: var(--warn);
+    }
+
+    .stat-green {
+      color: var(--success);
+    }
+
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-hdr h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    .refresh-btn {
+      font-size: 12px;
+      color: var(--text-2);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .refresh-btn:hover {
+      color: var(--text-1);
+      border-color: var(--border-hi);
+    }
+
+    .emergency-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-2);
+      font-size: 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+      opacity: 0.4;
+    }
+
+    .ec {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      animation: slideIn 0.4s ease both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .ec::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      background: linear-gradient(90deg, transparent, rgba(200, 206, 214, 0.04), transparent);
+      transform: translateX(-100%);
+      animation: cardShimmer 0.6s ease-in-out forwards;
+      animation-delay: var(--delay, 0ms);
+      pointer-events: none;
+    }
+
+    @keyframes cardShimmer {
+      to {
+        transform: translateX(100%);
+      }
+    }
+
+    .ec.sev-critical {
+      border-left: 4px solid var(--danger);
+      animation: slideIn 0.4s ease both, borderPulse 3s alternate infinite;
+      animation-delay: var(--delay, 0ms), calc(var(--delay, 0ms) + 0.4s);
+    }
+
+    @keyframes borderPulse {
+      0% {
+        box-shadow: inset 2px 0 8px rgba(204, 51, 51, 0.0);
+      }
+
+      100% {
+        box-shadow: inset 2px 0 8px rgba(204, 51, 51, 0.15);
+      }
+    }
+
+    .ec.sev-high {
+      border-left: 4px solid var(--warn);
+    }
+
+    .ec.sev-resolved {
+      border-left: 4px solid var(--success);
+      opacity: 0.6;
+    }
+
+    .ec-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ec-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .ec-badge.sev-critical {
+      background: rgba(229, 62, 62, .15);
+      color: #fc5a5a;
+      border: 1px solid rgba(229, 62, 62, .3);
+    }
+
+    .ec-badge.sev-high {
+      background: rgba(214, 158, 46, .15);
+      color: #f6c042;
+      border: 1px solid rgba(214, 158, 46, .3);
+    }
+
+    .ec-badge.sev-resolved {
+      background: rgba(56, 161, 105, .15);
+      color: #6bcf7c;
+      border: 1px solid rgba(56, 161, 105, .3);
+    }
+
+    .ec-badge.repeat {
+      background: rgba(214, 158, 46, .15);
+      color: #f6c042;
+      border: 1px solid rgba(214, 158, 46, .3);
+    }
+
+    .ec-meta {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    .ec-time {
+      font-size: 11px;
+      color: var(--text-3);
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    .ec-body {
+      padding: 12px 16px;
+    }
+
+    .ec-desc {
+      font-size: 14px;
+      color: var(--text-1);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .ec-desc em {
+      color: var(--text-2);
+      font-style: normal;
+    }
+
+    .ec-location {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ec-loc-link {
+      color: var(--accent-hi);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .ec-loc-link:hover {
+      text-decoration: underline;
+    }
+
+    .ec-loc-coords {
+      color: var(--text-3);
+      font-size: 11px;
+      font-family: monospace;
+    }
+
+    .ec-loc-acc {
+      color: var(--text-3);
+      font-size: 11px;
+    }
+
+    .ec-loc-none {
+      color: var(--text-3);
+    }
+
+    .ec-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0;
+    }
+
+    .ec-timestamp {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-left: auto;
+      align-self: center;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .ec-new-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+      background: rgba(200, 206, 214, 0.15);
+      color: var(--accent-hi);
+      border: 1px solid rgba(200, 206, 214, 0.3);
+      letter-spacing: 0.06em;
+    }
+
+    .ec-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-resolve {
+      font-size: 11px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid rgba(180, 200, 180, 0.2);
+      color: #8aad8a;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .btn-resolve:hover {
+      background: rgba(100, 180, 100, 0.05);
+      box-shadow: 0 0 12px rgba(100, 180, 100, 0.1);
+    }
+
+    .btn-resolve:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-escalate {
+      font-size: 11px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid rgba(200, 80, 80, 0.2);
+      color: #cc6666;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .btn-escalate:hover {
+      background: rgba(200, 80, 80, 0.05);
+      box-shadow: 0 0 12px rgba(200, 80, 80, 0.1);
+    }
+
+    .btn-escalate:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-2);
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 28px 20px;
+      }
+
+      .role-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .panic-btn {
+        width: 155px;
+        height: 155px;
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .stat-num {
+        font-size: 22px;
+      }
+    }
+
+    /* ── GLOBAL HEADER ── */
+    .global-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: rgba(15, 16, 17, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .global-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .lang-switcher {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .btn-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-toggle.active {
+      background: var(--text-1);
+      color: var(--bg-page);
+      border-color: var(--text-1);
+    }
+
+    body {
+      padding-top: 48px;
+      /* For global header */
+    }
+
+    /* ── LOW DATA MODE ── */
+    body.low-data {
+      background: #000 !important;
+      color: #fff !important;
+      font-family: system-ui, sans-serif !important;
+    }
+
+    body.low-data * {
+      animation: none !important;
+      box-shadow: none !important;
+      background-image: none !important;
+      border-color: #333 !important;
+      font-family: system-ui, sans-serif !important;
+      text-shadow: none !important;
+    }
+
+    body.low-data #radial-overlay,
+    body.low-data #three-container,
+    body.low-data .blob {
+      display: none !important;
+    }
+
+    body.low-data .role-desc,
+    body.low-data .ec-desc,
+    body.low-data .topbar-sub {
+      display: none !important;
+    }
+
+    body.low-data .panic-btn {
+      background: #fff;
+      color: #000;
+      border: 2px solid #fff;
+    }
+
+    body.low-data .btn-primary {
+      background: #fff;
+      color: #000;
+    }
+
+    body.low-data .screen {
+      background: #000 !important;
+    }
+
+    body.low-data .topbar,
+    body.low-data .global-header {
+      background: #000 !important;
+      border-bottom: 1px solid #333 !important;
+    }
+
+    .low-data-indicator {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      color: #000;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: bold;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    body.low-data .low-data-indicator {
+      display: block;
+    }
+
+    /* ── CONTACTS SCREEN ── */
+    .contacts-search-wrap {
+      padding: 16px 20px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 48px;
+      z-index: 9;
+    }
+
+    .contacts-search {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .contacts-search:focus {
+      border-color: var(--accent);
+    }
+
+    .contacts-body {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+      background: rgba(12, 13, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      border-radius: var(--radius-lg);
+    }
+
+    .contact-category {
+      margin-bottom: 24px;
+    }
+
+    .contact-category h3 {
+      font-size: 12px;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .contact-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #0a0b0c;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-name {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .contact-num {
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .btn-call {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      background: #111828;
+      color: #8ab4f8;
+      border: 1px solid #1a2a40;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .btn-call:hover {
+      background: #1a2a40;
+    }
+
+    .btn-directory {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-2);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 6px;
+    }
+
+    .btn-directory:hover {
+      color: var(--text-1);
+      border-color: var(--border-hi);
+    }
+
+    a[href^="tel:"] {
+      color: var(--accent-hi);
+      text-decoration: none;
+    }
+
+    a[href^="tel:"]:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="global-header">
+    <div class="topbar-title" data-i18n="appTitle">EmergencyHub</div>
+    <div class="global-header-right">
+      <select class="lang-switcher" id="lang-switcher" onchange="switchLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी (Hindi)</option>
+        <option value="mr">मराठी (Marathi)</option>
+        <option value="bn">বাংলা (Bengali)</option>
+        <option value="te">తెలుగు (Telugu)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+        <option value="gu">ગુજરાતી (Gujarati)</option>
+        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+        <option value="ml">മലയാളം (Malayalam)</option>
+        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+        <option value="or">ଓଡ଼ିଆ (Odia)</option>
+      </select>
+      <button class="btn-toggle" id="low-data-toggle" onclick="toggleLowData()" data-i18n="lowDataBtn">Low Data</button>
+    </div>
+  </header>
+  <div class="low-data-indicator" id="low-data-indicator" data-i18n="lowDataIndicator">Low Data Mode ON</div>
+
+  <div id="radial-overlay"></div>
+  <div id="three-container"></div>
+
+  <!-- ════════════════════════════ LOGIN SCREEN ════════════════════════════ -->
+  <div id="login-screen" class="screen active">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="logo-icon">🏨</div>
+        <div>
+          <h1 data-i18n="appTitle">EmergencyHub</h1>
+          <p data-i18n="appSubtitle">Hotel Safety System</p>
+        </div>
+      </div>
+
+      <div class="login-label" data-i18n="selectRole">Select your role</div>
+      <div class="role-grid">
+        <div class="role-card" id="role-guest" onclick="selectRole('guest', event)">
+          <span class="role-icon">🙋</span>
+          <div class="role-name" data-i18n="roleGuest">Guest</div>
+          <div class="role-desc" data-i18n="roleGuestDesc">Report an emergency</div>
+        </div>
+        <div class="role-card" id="role-staff" onclick="selectRole('staff', event)">
+          <span class="role-icon">👮</span>
+          <div class="role-name" data-i18n="roleStaff">Staff</div>
+          <div class="role-desc" data-i18n="roleStaffDesc">View all emergencies</div>
+        </div>
+        <div class="role-card" id="role-directory" onclick="selectRole('directory', event)">
+          <span class="role-icon">📞</span>
+          <div class="role-name" data-i18n="roleDirectory">Directory</div>
+          <div class="role-desc" data-i18n="roleDirectoryDesc">Emergency Contacts</div>
+        </div>
+      </div>
+
+      <div id="staff-pin-wrap" class="input-wrap" style="display:none;">
+        <label data-i18n="staffPin">Staff PIN</label>
+        <input type="password" id="staff-pin" placeholder="Enter staff PIN" data-i18n-placeholder="enterStaffPin"
+          maxlength="6" />
+      </div>
+
+      <button class="btn-primary" id="login-btn" onclick="doLogin()" disabled data-i18n="btnSelectRole">Select a role to
+        continue</button>
+      <div class="login-err" id="login-err"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ GUEST SCREEN ════════════════════════════ -->
+  <div id="guest-screen" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" data-i18n="emergencyReport">Emergency Report</div>
+        <div class="topbar-sub" id="guest-name-display"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge badge-guest" data-i18n="roleGuest">Guest</span>
+        <button class="btn-logout" onclick="doLogout()" data-i18n="signOut">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="guest-body">
+      <div class="panic-wrap">
+        <div class="panic-label" data-i18n="panicLabel">Press if you need immediate help</div>
+        <button class="panic-btn" id="panic-btn" onclick="sendPanic()">
+          <span class="panic-icon">🆘</span>
+          <span data-i18n="panicBtn">PANIC</span>
+        </button>
+        <div id="panic-limit-label" class="panic-limit-label"></div>
+      </div>
+
+      <div class="form-section">
+        <h3 data-i18n="descEmergency">Describe the emergency (optional)</h3>
+        <div class="room-row">
+          <label data-i18n="roomNo">Room No.</label>
+          <input type="text" id="guest-room" placeholder="e.g. 412" data-i18n-placeholder="roomPlaceholder"
+            maxlength="6" />
+        </div>
+        <div class="quick-btns">
+          <button class="quick-btn" onclick="quickFill('Medical emergency')" data-i18n="qMedical">🏥 Medical</button>
+          <button class="quick-btn" onclick="quickFill('Fire or smoke detected')" data-i18n="qFire">🔥 Fire /
+            Smoke</button>
+          <button class="quick-btn" onclick="quickFill('Security threat / Intruder')" data-i18n="qSecurity">🔐
+            Security</button>
+          <button class="quick-btn" onclick="quickFill('Flooding / Water leak')" data-i18n="qFlood">💧 Flood</button>
+          <button class="quick-btn" onclick="quickFill('Elevator stuck')" data-i18n="qElevator">🛗 Elevator</button>
+        </div>
+        <textarea id="guest-desc" placeholder="Describe what's happening..."
+          data-i18n-placeholder="descPlaceholder"></textarea>
+      </div>
+
+      <div id="guest-status" class="status-bar"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ STAFF SCREEN ════════════════════════════ -->
+  <div id="staff-screen" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" data-i18n="staffDashboard">Staff Dashboard</div>
+        <div class="topbar-sub" id="staff-clock" data-i18n="liveMonitor">Live emergency monitor</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge badge-staff" data-i18n="roleStaff">Staff</span>
+        <button class="btn-logout" onclick="doLogout()" data-i18n="signOut">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="staff-body">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num stat-red" id="stat-active">—</div>
+          <div class="stat-lbl" data-i18n="statActive">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num stat-yellow" id="stat-total">—</div>
+          <div class="stat-lbl" data-i18n="statTotal">Total Today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num stat-green" id="stat-resolved">—</div>
+          <div class="stat-lbl" data-i18n="statResolved">Resolved</div>
+        </div>
+      </div>
+
+      <div class="section-hdr">
+        <h2><span class="live-dot"></span><span data-i18n="activeEmergencies">Active Emergencies</span></h2>
+        <button class="refresh-btn" onclick="loadEmergencies()" data-i18n="refreshBtn">↻ Refresh</button>
+      </div>
+
+      <div id="emergency-list" class="emergency-list">
+        <div class="loading-state">
+          <div class="spinner"></div>Loading emergencies…
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════ CONTACTS SCREEN ════════════════════════════ -->
+  <div id="contacts-screen" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" data-i18n="contactsTitle">Emergency Contacts</div>
+        <div class="topbar-sub" data-i18n="contactsSub">Hotel & National Helplines</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn-logout" onclick="doLogout()" data-i18n="btnBack">Back</button>
+      </div>
+    </div>
+
+    <div class="contacts-search-wrap">
+      <input type="text" id="contacts-search" class="contacts-search" placeholder="Search contacts..."
+        data-i18n-placeholder="searchContacts" oninput="filterContacts()" />
+    </div>
+
+    <div class="contacts-body" id="contacts-directory">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, doc, updateDoc,
+      query, orderBy, onSnapshot, serverTimestamp, Timestamp
+    }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    /* ════════════════════════════════════════════════════════════
+       ██  REPLACE THE VALUES BELOW WITH YOUR FIREBASE CONFIG  ██
+       ════════════════════════════════════════════════════════════ */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCTik2MKNptioN3RHeo0-j35zVgVUJr9M",
+      authDomain: "yield-aura.firebaseapp.com",
+      projectId: "yield-aura",
+      storageBucket: "yield-aura.firebasestorage.app",
+      messagingSenderId: "618558742359",
+      appId: "1:618558742359:web:7c1fbfbfbdd71db2e62812"
+    };/* ══════════════════════════════════════════════════════════ */
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const STAFF_PIN = "1234"; // Change in production
+    let currentRole = null;
+    let unsubscribe = null;
+    let panicCount = 0;
+    let cooldownInterval = null;
+
+    let colorT = 0;
+    let targetColorT = 0;
+    let prevActive = 0, prevTotal = 0, prevResolved = 0;
+    let elapsedInterval = null;
+    let clockInterval = null;
+
+    function animateTicker(element, fromValue, toValue, duration) {
+      if (fromValue === toValue || !element) {
+        if (element) element.textContent = toValue;
+        return;
+      }
+      const start = performance.now();
+      function update(currentTime) {
+        const elapsed = currentTime - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOutExpo = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        const currentVal = Math.round(fromValue + (toValue - fromValue) * easeOutExpo);
+        element.textContent = currentVal;
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          element.textContent = toValue;
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    function startElapsedTimer() {
+      if (elapsedInterval) clearInterval(elapsedInterval);
+      elapsedInterval = setInterval(() => {
+        document.querySelectorAll('.ec-elapsed').forEach(el => {
+          const ts = parseInt(el.dataset.ts, 10);
+          if (ts) el.textContent = formatElapsed(new Date(ts));
+        });
+      }, 30000);
+    }
+
+    function startClock() {
+      const clockEl = document.getElementById("staff-clock");
+      if (!clockEl) return;
+      if (clockInterval) clearInterval(clockInterval);
+
+      function updateClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        const secs = String(now.getSeconds()).padStart(2, '0');
+        clockEl.innerHTML = `Live &middot; <span style="font-family: 'DM Mono', monospace; letter-spacing: 0.05em">${hrs}:${mins}:${secs}</span>`;
+      }
+      updateClock();
+      clockInterval = setInterval(updateClock, 1000);
+    }
+
+    function stopClock() {
+      if (clockInterval) clearInterval(clockInterval);
+    }
+
+    /* ── TRANSLATIONS & SETTINGS ── */
+    const translations = {
+      en: {
+        appTitle: "EmergencyHub", appSubtitle: "Hotel Safety System",
+        selectRole: "Select your role", roleGuest: "Guest", roleGuestDesc: "Report an emergency",
+        roleStaff: "Staff", roleStaffDesc: "View all emergencies",
+        roleDirectory: "Directory", roleDirectoryDesc: "Emergency Contacts",
+        staffPin: "Staff PIN", enterStaffPin: "Enter staff PIN", btnSelectRole: "Select a role to continue",
+        emergencyReport: "Emergency Report", signOut: "Sign Out",
+        panicLabel: "Press if you need immediate help", panicBtn: "PANIC",
+        descEmergency: "Describe the emergency (optional)", roomNo: "Room No.", roomPlaceholder: "e.g. 412",
+        qMedical: "🏥 Medical", qFire: "🔥 Fire / Smoke", qSecurity: "🔐 Security", qFlood: "💧 Flood", qElevator: "🛗 Elevator",
+        descPlaceholder: "Describe what's happening...",
+        staffDashboard: "Staff Dashboard", liveMonitor: "Live emergency monitor",
+        statActive: "Active", statTotal: "Total Today", statResolved: "Resolved",
+        activeEmergencies: "Active Emergencies", refreshBtn: "↻ Refresh",
+        contactsTitle: "Emergency Contacts", contactsSub: "Hotel & National Helplines", btnBack: "Back",
+        searchContacts: "Search contacts...", lowDataBtn: "Low Data", lowDataIndicator: "Low Data Mode ON",
+        btnContinueGuest: "Continue as Guest", btnSignInStaff: "Sign In as Staff", btnViewDirectory: "View Directory",
+        catInternal: "Hotel Internal", catMedical: "Medical", catFire: "Fire & Safety",
+        catPolice: "Police", catNational: "National Helplines", catUtilities: "Utilities",
+        btnCall: "Call"
+      },
+      hi: {
+        appTitle: "इमरजेंसी हब", appSubtitle: "होटल सुरक्षा प्रणाली", selectRole: "अपनी भूमिका चुनें",
+        roleGuest: "अतिथि (Guest)", roleGuestDesc: "आपातकाल की रिपोर्ट करें", roleStaff: "कर्मचारी (Staff)", roleStaffDesc: "सभी आपातस्थितियां देखें",
+        roleDirectory: "निर्देशिका", roleDirectoryDesc: "आपातकालीन संपर्क", staffPin: "कर्मचारी पिन", enterStaffPin: "पिन दर्ज करें",
+        btnSelectRole: "जारी रखने के लिए भूमिका चुनें", emergencyReport: "आपातकालीन रिपोर्ट", signOut: "लॉग आउट",
+        panicLabel: "तत्काल सहायता के लिए दबाएं", panicBtn: "आपातकाल (PANIC)", descEmergency: "आपातकाल का वर्णन करें (वैकल्पिक)",
+        roomNo: "कमरा नं.", roomPlaceholder: "उदा. 412", qMedical: "🏥 चिकित्सा", qFire: "🔥 आग / धुआं", qSecurity: "🔐 सुरक्षा",
+        qFlood: "💧 बाढ़", qElevator: "🛗 लिफ्ट", descPlaceholder: "क्या हो रहा है बताएं...", staffDashboard: "कर्मचारी डैशबोर्ड",
+        liveMonitor: "लाइव मॉनिटर", statActive: "सक्रिय", statTotal: "आज कुल", statResolved: "हल हो गया",
+        activeEmergencies: "सक्रिय आपातस्थितियां", refreshBtn: "↻ रिफ्रेश", contactsTitle: "आपातकालीन संपर्क",
+        contactsSub: "होटल और राष्ट्रीय हेल्पलाइन", btnBack: "वापस", searchContacts: "संपर्क खोजें...", lowDataBtn: "कम डेटा",
+        lowDataIndicator: "कम डेटा मोड चालू", btnContinueGuest: "अतिथि के रूप में जारी रखें", btnSignInStaff: "कर्मचारी के रूप में साइन इन करें",
+        btnViewDirectory: "निर्देशिका देखें", catInternal: "होटल इंटरनल", catMedical: "चिकित्सा", catFire: "आग और सुरक्षा",
+        catPolice: "पुलिस", catNational: "राष्ट्रीय हेल्पलाइन", catUtilities: "उपयोगिताएँ", btnCall: "कॉल"
+      },
+      mr: {
+        appTitle: "इमर्जन्सी हब", appSubtitle: "हॉटेल सुरक्षा प्रणाली", selectRole: "तुमची भूमिका निवडा",
+        roleGuest: "अतिथी", roleGuestDesc: "आणीबाणी नोंदवा", roleStaff: "कर्मचारी", roleStaffDesc: "सर्व आणीबाणी पहा",
+        roleDirectory: "निर्देशिका", roleDirectoryDesc: "आणीबाणी संपर्क", staffPin: "कर्मचारी पिन", enterStaffPin: "पिन प्रविष्ट करा",
+        btnSelectRole: "पुढे जाण्यासाठी भूमिका निवडा", emergencyReport: "आणीबाणी अहवाल", signOut: "बाहेर पडा",
+        panicLabel: "तातडीच्या मदतीसाठी दाबा", panicBtn: "आणीबाणी (PANIC)", descEmergency: "आणीबाणीचे वर्णन करा",
+        roomNo: "खोली क्र.", roomPlaceholder: "उदा. 412", qMedical: "🏥 वैद्यकीय", qFire: "🔥 आग", qSecurity: "🔐 सुरक्षा",
+        qFlood: "💧 पूर", qElevator: "🛗 लिफ्ट", descPlaceholder: "काय होत आहे ते सांगा...", staffDashboard: "कर्मचारी डॅशबोर्ड",
+        liveMonitor: "थेट मॉनिटर", statActive: "सक्रिय", statTotal: "आज एकूण", statResolved: "सोडवले",
+        activeEmergencies: "सक्रिय आणीबाणी", refreshBtn: "↻ रिफ्रेश", contactsTitle: "आणीबाणी संपर्क",
+        contactsSub: "हॉटेल आणि राष्ट्रीय हेल्पलाइन", btnBack: "मागे", searchContacts: "संपर्क शोधा...", lowDataBtn: "कमी डेटा",
+        lowDataIndicator: "कमी डेटा मोड चालू", btnContinueGuest: "अतिथी म्हणून पुढे जा", btnSignInStaff: "कर्मचारी म्हणून साइन इन करा",
+        btnViewDirectory: "निर्देशिका पहा", catInternal: "हॉटेल अंतर्गत", catMedical: "वैद्यकीय", catFire: "आग आणि सुरक्षा",
+        catPolice: "पोलीस", catNational: "राष्ट्रीय हेल्पलाइन", catUtilities: "उपयोगिता", btnCall: "कॉल"
+      },
+      bn: {
+        appTitle: "ইমার্জেন্সি হাব", appSubtitle: "হোটেল নিরাপত্তা ব্যবস্থা", selectRole: "আপনার ভূমিকা নির্বাচন করুন",
+        roleGuest: "অতিথি", roleGuestDesc: "জরুরী অবস্থা রিপোর্ট করুন", roleStaff: "কর্মী", roleStaffDesc: "সমস্ত জরুরী অবস্থা দেখুন",
+        roleDirectory: "ডিরেক্টরি", roleDirectoryDesc: "জরুরী যোগাযোগ", staffPin: "কর্মী পিন", enterStaffPin: "পিন লিখুন",
+        btnSelectRole: "চালিয়ে যেতে ভূমিকা নির্বাচন করুন", emergencyReport: "জরুরী রিপোর্ট", signOut: "সাইন আউট",
+        panicLabel: "জরুরী সাহায্যের জন্য চাপুন", panicBtn: "জরুরী (PANIC)", descEmergency: "জরুরী অবস্থার বর্ণনা দিন",
+        roomNo: "রুম নং", roomPlaceholder: "উদা. 412", qMedical: "🏥 মেডিকেল", qFire: "🔥 আগুন", qSecurity: "🔐 নিরাপত্তা",
+        qFlood: "💧 বন্যা", qElevator: "🛗 লিফট", descPlaceholder: "কী ঘটছে তা লিখুন...", staffDashboard: "কর্মী ড্যাশবোর্ড",
+        liveMonitor: "লাইভ মনিটর", statActive: "সক্রিয়", statTotal: "আজ মোট", statResolved: "সমাধান হয়েছে",
+        activeEmergencies: "সক্রিয় জরুরী অবস্থা", refreshBtn: "↻ রিফ্রেশ", contactsTitle: "জরুরী যোগাযোগ",
+        contactsSub: "হোটেল ও জাতীয় হেল্পলাইন", btnBack: "পিছনে", searchContacts: "যোগাযোগ খুঁজুন...", lowDataBtn: "কম ডেটা",
+        lowDataIndicator: "কম ডেটা মোড চালু", btnContinueGuest: "অতিথি হিসাবে চালিয়ে যান", btnSignInStaff: "কর্মী হিসাবে সাইন ইন করুন",
+        btnViewDirectory: "ডিরেক্টরি দেখুন", catInternal: "হোটেল অভ্যন্তরীণ", catMedical: "মেডিকেল", catFire: "আগুন ও নিরাপত্তা",
+        catPolice: "পুলিশ", catNational: "জাতীয় হেল্পলাইন", catUtilities: "ইউটিলিটি", btnCall: "কল"
+      },
+      te: {
+        appTitle: "ఎమర్జెన్సీ హబ్", appSubtitle: "హోటల్ భద్రతా వ్యవస్థ", selectRole: "మీ పాత్రను ఎంచుకోండి",
+        roleGuest: "అతిథి", roleGuestDesc: "అత్యవసర పరిస్థితిని నివేదించండి", roleStaff: "సిబ్బంది", roleStaffDesc: "అన్ని అత్యవసర పరిస్థితులను చూడండి",
+        roleDirectory: "డైరెక్టరీ", roleDirectoryDesc: "అత్యవసర పరిచయాలు", staffPin: "స్టాఫ్ పిన్", enterStaffPin: "పిన్ నమోదు చేయండి",
+        btnSelectRole: "కొనసాగడానికి పాత్రను ఎంచుకోండి", emergencyReport: "అత్యవసర నివేదిక", signOut: "సైన్ అవుట్",
+        panicLabel: "తక్షణ సహాయం కోసం నొక్కండి", panicBtn: "అత్యవసరం (PANIC)", descEmergency: "సమస్యను వివరించండి",
+        roomNo: "గది నెం.", roomPlaceholder: "ఉదా. 412", qMedical: "🏥 వైద్య", qFire: "🔥 అగ్ని / పొగ", qSecurity: "🔐 భద్రత",
+        qFlood: "💧 వరద", qElevator: "🛗 లిఫ్ట్", descPlaceholder: "ఏమి జరుగుతుందో వివరించండి...", staffDashboard: "స్టాఫ్ డాష్‌బోర్డ్",
+        liveMonitor: "లైవ్ మానిటర్", statActive: "క్రియాశీల", statTotal: "నేడు మొత్తం", statResolved: "పరిష్కరించబడింది",
+        activeEmergencies: "క్రియాశీల అత్యవసర పరిస్థితులు", refreshBtn: "↻ రిఫ్రెష్", contactsTitle: "అత్యవసర పరిచయాలు",
+        contactsSub: "హోటల్ & జాతీయ హెల్ప్‌లైన్‌లు", btnBack: "వెనుకకు", searchContacts: "పరిచయాలను శోధించండి...", lowDataBtn: "తక్కువ డేటా",
+        lowDataIndicator: "లో డేటా మోడ్ ఆన్‌లో ఉంది", btnContinueGuest: "అతిథిగా కొనసాగండి", btnSignInStaff: "సిబ్బందిగా సైన్ ఇన్ చేయండి",
+        btnViewDirectory: "డైరెక్టరీని చూడండి", catInternal: "హోటల్ అంతర్గత", catMedical: "వైద్య", catFire: "అగ్ని & భద్రత",
+        catPolice: "పోలీసు", catNational: "జాతీయ హెల్ప్‌లైన్‌లు", catUtilities: "యుటిలిటీస్", btnCall: "కాల్"
+      },
+      ta: {
+        appTitle: "அவசர ஹப்", appSubtitle: "ஹோட்டல் பாதுகாப்பு அமைப்பு", selectRole: "உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்",
+        roleGuest: "விருந்தினர்", roleGuestDesc: "அவசரத்தை புகாரளிக்கவும்", roleStaff: "பணியாளர்கள்", roleStaffDesc: "அனைத்து அவசரங்களையும் காண்க",
+        roleDirectory: "கோப்பகம்", roleDirectoryDesc: "அவசர தொடர்புகள்", staffPin: "ஊழியர் பின்", enterStaffPin: "பின் உள்ளிடவும்",
+        btnSelectRole: "தொடர ஒரு பங்கைத் தேர்ந்தெடுக்கவும்", emergencyReport: "அவசர அறிக்கை", signOut: "வெளியேறு",
+        panicLabel: "உடனடி உதவிக்கு அழுத்தவும்", panicBtn: "அவசரம் (PANIC)", descEmergency: "அவசரத்தை விவரிக்கவும்",
+        roomNo: "அறை எண்.", roomPlaceholder: "உதா. 412", qMedical: "🏥 மருத்துவம்", qFire: "🔥 தீ / புகை", qSecurity: "🔐 பாதுகாப்பு",
+        qFlood: "💧 வெள்ளம்", qElevator: "🛗 மின்தூக்கி", descPlaceholder: "என்ன நடக்கிறது என்பதை விவரிக்கவும்...", staffDashboard: "ஊழியர் டாஷ்போர்டு",
+        liveMonitor: "நேரடி கண்காணிப்பு", statActive: "செயலில்", statTotal: "இன்று மொத்தம்", statResolved: "தீர்க்கப்பட்டது",
+        activeEmergencies: "செயலில் உள்ள அவசரங்கள்", refreshBtn: "↻ புதுப்பி", contactsTitle: "அவசர தொடர்புகள்",
+        contactsSub: "ஹோட்டல் & தேசிய உதவி எண்கள்", btnBack: "பின்புறம்", searchContacts: "தொடர்புகளைத் தேடு...", lowDataBtn: "குறைந்த தரவு",
+        lowDataIndicator: "குறைந்த தரவு பயன்முறை இயக்கத்தில் உள்ளது", btnContinueGuest: "விருந்தினராக தொடரவும்", btnSignInStaff: "பணியாளராக உள்நுழைக",
+        btnViewDirectory: "கோப்பகத்தைக் காண்க", catInternal: "ஹோட்டல் உள்", catMedical: "மருத்துவம்", catFire: "தீ & பாதுகாப்பு",
+        catPolice: "காவல்துறை", catNational: "தேசிய உதவி எண்கள்", catUtilities: "பயன்பாடுகள்", btnCall: "அழைப்பு"
+      },
+      gu: {
+        appTitle: "ઇમરજન્સી હબ", appSubtitle: "હોટેલ સુરક્ષા સિસ્ટમ", selectRole: "તમારી ભૂમિકા પસંદ કરો",
+        roleGuest: "અતિથિ", roleGuestDesc: "કટોકટીની જાણ કરો", roleStaff: "સ્ટાફ", roleStaffDesc: "બધી કટોકટી જુઓ",
+        roleDirectory: "ડિરેક્ટરી", roleDirectoryDesc: "ઇમરજન્સી સંપર્કો", staffPin: "સ્ટાફ પિન", enterStaffPin: "પિન દાખલ કરો",
+        btnSelectRole: "ચાલુ રાખવા માટે ભૂમિકા પસંદ કરો", emergencyReport: "કટોકટી અહેવાલ", signOut: "સાઇન આઉટ",
+        panicLabel: "તાત્કાલિક મદદ માટે દબાવો", panicBtn: "કટોકટી (PANIC)", descEmergency: "કટોકટીનું વર્ણન કરો",
+        roomNo: "રૂમ નં.", roomPlaceholder: "દા.ત. 412", qMedical: "🏥 તબીબી", qFire: "🔥 આગ", qSecurity: "🔐 સુરક્ષા",
+        qFlood: "💧 પૂર", qElevator: "🛗 લિફ્ટ", descPlaceholder: "શું થઈ રહ્યું છે તે વર્ણવો...", staffDashboard: "સ્ટાફ ડેશબોર્ડ",
+        liveMonitor: "જીવંત મોનિટર", statActive: "સક્રિય", statTotal: "આજે કુલ", statResolved: "ઉકેલાયેલ",
+        activeEmergencies: "સક્રિય કટોકટી", refreshBtn: "↻ રિફ્રેશ", contactsTitle: "ઇમરજન્સી સંપર્કો",
+        contactsSub: "હોટેલ અને રાષ્ટ્રીય હેલ્પલાઇન", btnBack: "પાછળ", searchContacts: "સંપર્કો શોધો...", lowDataBtn: "ઓછો ડેટા",
+        lowDataIndicator: "લો ડેટા મોડ ચાલુ છે", btnContinueGuest: "અતિથિ તરીકે ચાલુ રાખો", btnSignInStaff: "સ્ટાફ તરીકે સાઇન ઇન કરો",
+        btnViewDirectory: "ડિરેક્ટરી જુઓ", catInternal: "હોટેલ આંતરિક", catMedical: "તબીબી", catFire: "આગ અને સુરક્ષા",
+        catPolice: "પોલીસ", catNational: "રાષ્ટ્રીય હેલ્પલાઇન", catUtilities: "ઉપયોગિતાઓ", btnCall: "કૉલ"
+      },
+      kn: {
+        appTitle: "ತುರ್ತು ಹಬ್", appSubtitle: "ಹೋಟೆಲ್ ಭದ್ರತಾ ವ್ಯವಸ್ಥೆ", selectRole: "ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+        roleGuest: "ಅತಿಥಿ", roleGuestDesc: "ತುರ್ತು ಪರಿಸ್ಥಿತಿಯನ್ನು ವರದಿ ಮಾಡಿ", roleStaff: "ಸಿಬ್ಬಂದಿ", roleStaffDesc: "ಎಲ್ಲಾ ತುರ್ತು ಪರಿಸ್ಥಿತಿಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
+        roleDirectory: "ಡೈರೆಕ್ಟರಿ", roleDirectoryDesc: "ತುರ್ತು ಸಂಪರ್ಕಗಳು", staffPin: "ಸಿಬ್ಬಂದಿ ಪಿನ್", enterStaffPin: "ಪಿನ್ ನಮೂದಿಸಿ",
+        btnSelectRole: "ಮುಂದುವರಿಯಲು ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ", emergencyReport: "ತುರ್ತು ವರದಿ", signOut: "ಸೈನ್ ಔಟ್",
+        panicLabel: "ತುರ್ತು ಸಹಾಯಕ್ಕಾಗಿ ಒತ್ತಿರಿ", panicBtn: "ತುರ್ತು (PANIC)", descEmergency: "ಸಮಸ್ಯೆಯನ್ನು ವಿವರಿಸಿ",
+        roomNo: "ಕೊಠಡಿ ಸಂಖ್ಯೆ.", roomPlaceholder: "ಉದಾ. 412", qMedical: "🏥 ವೈದ್ಯಕೀಯ", qFire: "🔥 ಬೆಂಕಿ", qSecurity: "🔐 ಭದ್ರತೆ",
+        qFlood: "💧 ಪ್ರವಾಹ", qElevator: "🛗 ಲಿಫ್ಟ್", descPlaceholder: "ಏನಾಗುತ್ತಿದೆ ಎಂದು ವಿವರಿಸಿ...", staffDashboard: "ಸಿಬ್ಬಂದಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        liveMonitor: "ಲೈವ್ ಮಾನಿಟರ್", statActive: "ಸಕ್ರಿಯ", statTotal: "ಇಂದು ಒಟ್ಟು", statResolved: "ಪರಿಹರಿಸಲಾಗಿದೆ",
+        activeEmergencies: "ಸಕ್ರಿಯ ತುರ್ತು ಪರಿಸ್ಥಿತಿಗಳು", refreshBtn: "↻ ರಿಫ್ರೆಶ್", contactsTitle: "ತುರ್ತು ಸಂಪರ್ಕಗಳು",
+        contactsSub: "ಹೋಟೆಲ್ ಮತ್ತು ರಾಷ್ಟ್ರೀಯ ಸಹಾಯವಾಣಿಗಳು", btnBack: "ಹಿಂದೆ", searchContacts: "ಸಂಪರ್ಕಗಳನ್ನು ಹುಡುಕಿ...", lowDataBtn: "ಕಡಿಮೆ ಡೇಟಾ",
+        lowDataIndicator: "ಲೋ ಡೇಟಾ ಮೋಡ್ ಆನ್ ಆಗಿದೆ", btnContinueGuest: "ಅತಿಥಿಯಾಗಿ ಮುಂದುವರಿಯಿರಿ", btnSignInStaff: "ಸಿಬ್ಬಂದಿಯಾಗಿ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+        btnViewDirectory: "ಡೈರೆಕ್ಟರಿ ವೀಕ್ಷಿಸಿ", catInternal: "ಹೋಟೆಲ್ ಆಂತರಿಕ", catMedical: "ವೈದ್ಯಕೀಯ", catFire: "ಬೆಂಕಿ ಮತ್ತು ಭದ್ರತೆ",
+        catPolice: "ಪೊಲೀಸ್", catNational: "ರಾಷ್ಟ್ರೀಯ ಸಹಾಯವಾಣಿಗಳು", catUtilities: "ಉಪಯುಕ್ತತೆಗಳು", btnCall: "ಕರೆ"
+      },
+      ml: {
+        appTitle: "എമർജൻസി ഹബ്", appSubtitle: "ഹോട്ടൽ സുരക്ഷാ സിസ്റ്റം", selectRole: "നിങ്ങളുടെ റോൾ തിരഞ്ഞെടുക്കുക",
+        roleGuest: "അതിഥി", roleGuestDesc: "അടിയന്തരാവസ്ഥ റിപ്പോർട്ട് ചെയ്യുക", roleStaff: "സ്റ്റാഫ്", roleStaffDesc: "എല്ലാ അടിയന്തരാവസ്ഥകളും കാണുക",
+        roleDirectory: "ഡയറക്ടറി", roleDirectoryDesc: "അടിയന്തര കോൺടാക്റ്റുകൾ", staffPin: "സ്റ്റാഫ് പിൻ", enterStaffPin: "പിൻ നൽകുക",
+        btnSelectRole: "തുടരാൻ ഒരു റോൾ തിരഞ്ഞെടുക്കുക", emergencyReport: "അടിയന്തര റിപ്പോർട്ട്", signOut: "സൈൻ ഔട്ട്",
+        panicLabel: "അടിയന്തര സഹായത്തിനായി അമർത്തുക", panicBtn: "അടിയന്തരം (PANIC)", descEmergency: "പ്രശ്നം വിശദീകരിക്കുക",
+        roomNo: "റൂം നമ്പർ", roomPlaceholder: "ഉദാ. 412", qMedical: "🏥 മെഡിക്കൽ", qFire: "🔥 തീ", qSecurity: "🔐 സുരക്ഷ",
+        qFlood: "💧 വെള്ളപ്പൊക്കം", qElevator: "🛗 ലിഫ്റ്റ്", descPlaceholder: "എന്താണ് സംഭവിക്കുന്നതെന്ന് വിശദീകരിക്കുക...", staffDashboard: "സ്റ്റാഫ് ഡാഷ്‌ബോർഡ്",
+        liveMonitor: "തത്സമയ മോണിറ്റർ", statActive: "സജീവം", statTotal: "ഇന്ന് ആകെ", statResolved: "പരിഹരിച്ചു",
+        activeEmergencies: "സജീവമായ അടിയന്തരാവസ്ഥകൾ", refreshBtn: "↻ റിഫ്രഷ്", contactsTitle: "അടിയന്തര കോൺടാക്റ്റുകൾ",
+        contactsSub: "ഹോട്ടൽ & ദേശീയ ഹെൽപ്പ് ലൈനുകൾ", btnBack: "പുറകിലേക്ക്", searchContacts: "കോൺടാക്റ്റുകൾ തിരയുക...", lowDataBtn: "കുറഞ്ഞ ഡാറ്റ",
+        lowDataIndicator: "ലോ ഡാറ്റ മോഡ് ഓണാണ്", btnContinueGuest: "അതിഥിയായി തുടരുക", btnSignInStaff: "സ്റ്റാഫായി സൈൻ ഇൻ ചെയ്യുക",
+        btnViewDirectory: "ഡയറക്ടറി കാണുക", catInternal: "ഹോട്ടൽ ഇന്റേണൽ", catMedical: "മെഡിക്കൽ", catFire: "തീ & സുരക്ഷ",
+        catPolice: "പോലീസ്", catNational: "ദേശീയ ഹെൽപ്പ് ലൈനുകൾ", catUtilities: "യൂട്ടിലിറ്റികൾ", btnCall: "കോൾ"
+      },
+      pa: {
+        appTitle: "ਐਮਰਜੈਂਸੀ ਹੱਬ", appSubtitle: "ਹੋਟਲ ਸੁਰੱਖਿਆ ਸਿਸਟਮ", selectRole: "ਆਪਣੀ ਭੂਮਿਕਾ ਚੁਣੋ",
+        roleGuest: "ਮਹਿਮਾਨ", roleGuestDesc: "ਐਮਰਜੈਂਸੀ ਦੀ ਰਿਪੋਰਟ ਕਰੋ", roleStaff: "ਸਟਾਫ", roleStaffDesc: "ਸਾਰੀਆਂ ਐਮਰਜੈਂਸੀ ਦੇਖੋ",
+        roleDirectory: "ਡਾਇਰੈਕਟਰੀ", roleDirectoryDesc: "ਐਮਰਜੈਂਸੀ ਸੰਪਰਕ", staffPin: "ਸਟਾਫ ਪਿੰਨ", enterStaffPin: "ਪਿੰਨ ਦਾਖਲ ਕਰੋ",
+        btnSelectRole: "ਜਾਰੀ ਰੱਖਣ ਲਈ ਭੂਮਿਕਾ ਚੁਣੋ", emergencyReport: "ਐਮਰਜੈਂਸੀ ਰਿਪੋਰਟ", signOut: "ਸਾਈਨ ਆਉਟ",
+        panicLabel: "ਤੁਰੰਤ ਮਦਦ ਲਈ ਦਬਾਓ", panicBtn: "ਐਮਰਜੈਂਸੀ (PANIC)", descEmergency: "ਐਮਰਜੈਂਸੀ ਦਾ ਵਰਣਨ ਕਰੋ",
+        roomNo: "ਕਮਰਾ ਨੰ.", roomPlaceholder: "ਉਦਾਹਰਨ 412", qMedical: "🏥 ਮੈਡੀਕਲ", qFire: "🔥 ਅੱਗ", qSecurity: "🔐 ਸੁਰੱਖਿਆ",
+        qFlood: "💧 ਹੜ੍ਹ", qElevator: "🛗 ਲਿਫਟ", descPlaceholder: "ਕੀ ਹੋ ਰਿਹਾ ਹੈ ਦੱਸੋ...", staffDashboard: "ਸਟਾਫ ਡੈਸ਼ਬੋਰਡ",
+        liveMonitor: "ਲਾਈਵ ਮਾਨੀਟਰ", statActive: "ਸਰਗਰਮ", statTotal: "ਅੱਜ ਕੁੱਲ", statResolved: "ਹੱਲ ਹੋ ਗਿਆ",
+        activeEmergencies: "ਸਰਗਰਮ ਐਮਰਜੈਂਸੀ", refreshBtn: "↻ ਰਿਫ੍ਰੈਸ਼", contactsTitle: "ਐਮਰਜੈਂਸੀ ਸੰਪਰਕ",
+        contactsSub: "ਹੋਟਲ ਅਤੇ ਰਾਸ਼ਟਰੀ ਹੈਲਪਲਾਈਨ", btnBack: "ਪਿੱਛੇ", searchContacts: "ਸੰਪਰਕ ਖੋਜੋ...", lowDataBtn: "ਘੱਟ ਡੇਟਾ",
+        lowDataIndicator: "ਲੋਅ ਡੇਟਾ ਮੋਡ ਚਾਲੂ ਹੈ", btnContinueGuest: "ਮਹਿਮਾਨ ਵਜੋਂ ਜਾਰੀ ਰੱਖੋ", btnSignInStaff: "ਸਟਾਫ ਵਜੋਂ ਸਾਈਨ ਇਨ ਕਰੋ",
+        btnViewDirectory: "ਡਾਇਰੈਕਟਰੀ ਦੇਖੋ", catInternal: "ਹੋਟਲ ਇੰਟਰਨਲ", catMedical: "ਮੈਡੀਕਲ", catFire: "ਅੱਗ ਅਤੇ ਸੁਰੱਖਿਆ",
+        catPolice: "ਪੁਲਿਸ", catNational: "ਰਾਸ਼ਟਰੀ ਹੈਲਪਲਾਈਨ", catUtilities: "ਉਪਯੋਗਤਾਵਾਂ", btnCall: "ਕਾਲ"
+      },
+      or: {
+        appTitle: "ଜରୁରୀକାଳୀନ ହବ୍", appSubtitle: "ହୋଟେଲ ସୁରକ୍ଷା ବ୍ୟବସ୍ଥା", selectRole: "ଆପଣଙ୍କର ଭୂମିକା ବାଛନ୍ତୁ",
+        roleGuest: "ଅତିଥି", roleGuestDesc: "ଜରୁରୀକାଳୀନ ପରିସ୍ଥିତି ରିପୋର୍ଟ କରନ୍ତୁ", roleStaff: "କର୍ମଚାରୀ", roleStaffDesc: "ସମସ୍ତ ଜରୁରୀକାଳୀନ ପରିସ୍ଥିତି ଦେଖନ୍ତୁ",
+        roleDirectory: "ଡିରେକ୍ଟୋରୀ", roleDirectoryDesc: "ଜରୁରୀକାଳୀନ ଯୋଗାଯୋଗ", staffPin: "ଷ୍ଟାଫ୍ ପିନ୍", enterStaffPin: "ପିନ୍ ଦିଅନ୍ତୁ",
+        btnSelectRole: "ଆଗକୁ ବଢିବାକୁ ଭୂମିକା ବାଛନ୍ତୁ", emergencyReport: "ଜରୁରୀକାଳୀନ ରିପୋର୍ଟ", signOut: "ସାଇନ୍ ଆଉଟ୍",
+        panicLabel: "ତୁରନ୍ତ ସାହାଯ୍ୟ ପାଇଁ ଦବାନ୍ତୁ", panicBtn: "ଜରୁରୀକାଳୀନ (PANIC)", descEmergency: "ଜରୁରୀକାଳୀନ ପରିସ୍ଥିତି ବର୍ଣ୍ଣନା କରନ୍ତୁ",
+        roomNo: "ରୁମ୍ ନଂ.", roomPlaceholder: "ଉଦାହରଣ 412", qMedical: "🏥 ମେଡିକାଲ୍", qFire: "🔥 ନିଆଁ", qSecurity: "🔐 ସୁରକ୍ଷା",
+        qFlood: "💧 ବନ୍ୟା", qElevator: "🛗 ଲିଫ୍ଟ", descPlaceholder: "କଣ ଘଟୁଛି ବର୍ଣ୍ଣନା କରନ୍ତୁ...", staffDashboard: "ଷ୍ଟାଫ୍ ଡ୍ୟାସବୋର୍ଡ",
+        liveMonitor: "ଲାଇଭ୍ ମନିଟର୍", statActive: "ସକ୍ରିୟ", statTotal: "ଆଜି ମୋଟ", statResolved: "ସମାଧାନ ହୋଇଛି",
+        activeEmergencies: "ସକ୍ରିୟ ଜରୁରୀକାଳୀନ ପରିସ୍ଥିତି", refreshBtn: "↻ ରିଫ୍ରେସ୍", contactsTitle: "ଜରୁରୀକାଳୀନ ଯୋଗାଯୋଗ",
+        contactsSub: "ହୋଟେଲ ଏବଂ ଜାତୀୟ ହେଲ୍ପଲାଇନ୍", btnBack: "ପଛକୁ", searchContacts: "ଯୋଗାଯୋଗ ଖୋଜନ୍ତୁ...", lowDataBtn: "କମ୍ ଡାଟା",
+        lowDataIndicator: "ଲୋ ଡାଟା ମୋଡ୍ ଅନ୍ ଅଛି", btnContinueGuest: "ଅତିଥି ଭାବରେ ଆଗକୁ ବଢନ୍ତୁ", btnSignInStaff: "ଷ୍ଟାଫ୍ ଭାବରେ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ",
+        btnViewDirectory: "ଡିରେକ୍ଟୋରୀ ଦେଖନ୍ତୁ", catInternal: "ହୋଟେଲ ଇଣ୍ଟରନାଲ୍", catMedical: "ମେଡିକାଲ୍", catFire: "ନିଆଁ ଏବଂ ସୁରକ୍ଷା",
+        catPolice: "ପୋଲିସ୍", catNational: "ଜାତୀୟ ହେଲ୍ପଲାଇନ୍", catUtilities: "ୟୁଟିଲିଟି", btnCall: "କଲ୍"
+      }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'en';
+    let isLowData = localStorage.getItem('lowData') === 'true';
+
+    window.switchLanguage = function (lang) {
+      currentLang = lang;
+      localStorage.setItem('lang', lang);
+      applyTranslations();
+      renderContacts();
+    };
+
+    function applyTranslations() {
+      const t = translations[currentLang];
+      if (!t) return;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (t[key]) el.placeholder = t[key];
+      });
+      document.getElementById("lang-switcher").value = currentLang;
+      updateLoginButton();
+    }
+
+    window.toggleLowData = function () {
+      isLowData = !isLowData;
+      localStorage.setItem('lowData', isLowData);
+      applyLowData();
+    };
+
+    function applyLowData() {
+      if (isLowData) {
+        document.body.classList.add('low-data');
+        document.getElementById('low-data-toggle').classList.add('active');
+      } else {
+        document.body.classList.remove('low-data');
+        document.getElementById('low-data-toggle').classList.remove('active');
+      }
+    }
+
+    const contactsData = [
+      { name: "Front Desk", number: "9", category: "catInternal" },
+      { name: "Security", number: "1001", category: "catInternal" },
+      { name: "Housekeeping", number: "1002", category: "catInternal" },
+      { name: "Maintenance", number: "1003", category: "catInternal" },
+      { name: "Room Service", number: "1004", category: "catInternal" },
+      { name: "Manager on Duty", number: "1005", category: "catInternal" },
+      { name: "Ambulance", number: "102", category: "catMedical" },
+      { name: "Nearest Hospital", number: "011-23456789", category: "catMedical" },
+      { name: "Doctor on Call", number: "9876543210", category: "catMedical" },
+      { name: "Fire Brigade", number: "101", category: "catFire" },
+      { name: "Fire Warden", number: "1006", category: "catFire" },
+      { name: "Police", number: "100", category: "catPolice" },
+      { name: "Women Helpline", number: "1091", category: "catPolice" },
+      { name: "Child Helpline", number: "1098", category: "catPolice" },
+      { name: "Disaster Management", number: "108", category: "catNational" },
+      { name: "Cyber Crime", number: "1930", category: "catNational" },
+      { name: "Anti-Poison", number: "1066", category: "catNational" },
+      { name: "Electricity Emergency", number: "1912", category: "catUtilities" },
+      { name: "Water Emergency", number: "1916", category: "catUtilities" },
+      { name: "Gas Leak (Indane)", number: "1906", category: "catUtilities" },
+      { name: "Gas Leak (HP Gas)", number: "1906", category: "catUtilities" },
+      { name: "Gas Leak (Bharat Gas)", number: "1906", category: "catUtilities" },
+    ];
+
+    window.renderContacts = function (filter = "") {
+      const dir = document.getElementById("contacts-directory");
+      const t = translations[currentLang] || translations.en;
+      if (!dir) return;
+      dir.innerHTML = "";
+
+      const lowerFilter = filter.toLowerCase();
+      const filtered = contactsData.filter(c =>
+        c.name.toLowerCase().includes(lowerFilter) ||
+        c.number.includes(lowerFilter) ||
+        t[c.category].toLowerCase().includes(lowerFilter)
+      );
+
+      const grouped = {};
+      filtered.forEach(c => {
+        if (!grouped[c.category]) grouped[c.category] = [];
+        grouped[c.category].push(c);
+      });
+
+      const categoriesOrder = ["catInternal", "catMedical", "catFire", "catPolice", "catNational", "catUtilities"];
+
+      categoriesOrder.forEach(cat => {
+        if (grouped[cat] && grouped[cat].length > 0) {
+          const catDiv = document.createElement("div");
+          catDiv.className = "contact-category";
+          catDiv.innerHTML = `<h3>${t[cat]}</h3>`;
+          grouped[cat].forEach(c => {
+            catDiv.innerHTML += `
+              <div class="contact-card">
+                <div class="contact-info">
+                  <div class="contact-name">${escHtml(c.name)}</div>
+                  <div class="contact-num"><a href="tel:${c.number}">${c.number}</a></div>
+                </div>
+                <a href="tel:${c.number}" class="btn-call">📞 ${t.btnCall}</a>
+              </div>
+            `;
+          });
+          dir.appendChild(catDiv);
+        }
+      });
+
+      if (filtered.length === 0) {
+        dir.innerHTML = `<div class="empty-state">No contacts found.</div>`;
+      }
+    };
+
+    window.filterContacts = function () {
+      const term = document.getElementById("contacts-search").value;
+      renderContacts(term);
+    };
+
+    function updateLoginButton() {
+      const btn = document.getElementById("login-btn");
+      const t = translations[currentLang] || translations.en;
+      if (!currentRole) {
+        btn.textContent = t.btnSelectRole;
+        return;
+      }
+      if (currentRole === "guest") btn.textContent = t.btnContinueGuest;
+      else if (currentRole === "staff") btn.textContent = t.btnSignInStaff;
+      else if (currentRole === "directory") btn.textContent = t.btnViewDirectory;
+    }
+
+    // Initialize Settings on load
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTranslations();
+      applyLowData();
+      renderContacts();
+    });
+
+    /* ── ROLE SELECTION ── */
+    window.selectRole = function (role, event) {
+      if (currentRole === role) return;
+      currentRole = role;
+
+      const cards = ["guest", "staff", "directory"];
+      cards.forEach(c => {
+        const el = document.getElementById(`role-${c}`);
+        if (!el) return;
+
+        if (c === role) {
+          el.classList.add("selected");
+          // GSAP Flip/Burst animation
+          gsap.timeline()
+            .to(el, { scale: 1.05, rotationY: 15, duration: 0.15, ease: "power1.out" })
+            .to(el, { rotationY: 0, duration: 0.4, ease: "elastic.out(1, 0.5)" });
+
+          // Ripple + glow pulse effect from click point
+          if (event) {
+            const rect = el.getBoundingClientRect();
+            const ripple = document.createElement("div");
+            ripple.style.position = "absolute";
+            ripple.style.background = "radial-gradient(circle, rgba(200, 206, 214, 0.4) 0%, transparent 70%)";
+            ripple.style.borderRadius = "50%";
+            ripple.style.pointerEvents = "none";
+            ripple.style.width = "200px";
+            ripple.style.height = "200px";
+            ripple.style.left = `${event.clientX - rect.left - 100}px`;
+            ripple.style.top = `${event.clientY - rect.top - 100}px`;
+            el.appendChild(ripple);
+            gsap.to(ripple, { scale: 2, opacity: 0, duration: 0.6, onComplete: () => ripple.remove() });
+          }
+        } else {
+          el.classList.remove("selected");
+          // Unselected cards blur and fade back
+          gsap.to(el, { scale: 0.95, opacity: 0.4, filter: "blur(2px)", duration: 0.3 });
+        }
+      });
+
+      document.getElementById("staff-pin-wrap").style.display = role === "staff" ? "block" : "none";
+      const btn = document.getElementById("login-btn");
+      btn.disabled = false;
+      updateLoginButton();
+
+      // Continue button slide-up + glow effect
+      gsap.fromTo(btn, { y: 20, opacity: 0, boxShadow: "none" }, { y: 0, opacity: 1, boxShadow: "0 0 20px rgba(255, 50, 50, 0.5)", duration: 0.5, ease: "back.out(1.5)" });
+    };
+
+    /* ── LOGIN ── */
+    window.doLogin = function () {
+      const err = document.getElementById("login-err");
+      err.textContent = "";
+
+      if (currentRole === "staff") {
+        const pin = document.getElementById("staff-pin").value.trim();
+        if (pin !== STAFF_PIN) { err.textContent = "Incorrect PIN. Try again."; return; }
+        showScreen("staff-screen");
+        loadEmergencies();
+      } else if (currentRole === "guest") {
+        showScreen("guest-screen");
+        const t = translations[currentLang] || translations.en;
+        document.getElementById("guest-name-display").textContent = t.roleGuest;
+      } else if (currentRole === "directory") {
+        showScreen("contacts-screen");
+      }
+    };
+
+    /* ── LOGOUT ── */
+    window.doLogout = function () {
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      currentRole = null;
+      panicCount = 0;
+      if (cooldownInterval) { clearInterval(cooldownInterval); cooldownInterval = null; }
+      const panicBtn = document.getElementById("panic-btn");
+      if (panicBtn) panicBtn.classList.remove("max-alerts", "sending", "cooldown");
+      const panicLimitLabel = document.getElementById("panic-limit-label");
+      if (panicLimitLabel) panicLimitLabel.classList.remove("show");
+      document.getElementById("staff-pin").value = "";
+      document.getElementById("login-err").textContent = "";
+      document.getElementById("role-guest").classList.remove("selected");
+      document.getElementById("role-staff").classList.remove("selected");
+      const dirCard = document.getElementById("role-directory");
+      if (dirCard) dirCard.classList.remove("selected");
+      document.getElementById("staff-pin-wrap").style.display = "none";
+      document.getElementById("guest-desc").value = "";
+      document.getElementById("guest-room").value = "";
+      document.getElementById("contacts-search").value = "";
+      filterContacts();
+      const btn = document.getElementById("login-btn");
+      btn.disabled = true;
+      updateLoginButton();
+      setGuestStatus("", "");
+      showScreen("login-screen");
+    };
+
+    /* ── GPS HELPER ── */
+    function getCoords() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) { resolve(null); return; }
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }),
+          () => resolve(null),
+          { timeout: 8000, maximumAge: 0, enableHighAccuracy: true }
+        );
+      });
+    }
+
+    /* ── PANIC BUTTON ── */
+    window.sendPanic = async function () {
+      const btn = document.getElementById("panic-btn");
+      if (btn.classList.contains("sending") || btn.classList.contains("max-alerts") || btn.classList.contains("cooldown")) return;
+
+      const ripple = document.createElement("div");
+      ripple.className = "panic-ripple";
+      ripple.addEventListener("animationend", () => ripple.remove());
+      btn.appendChild(ripple);
+
+      const desc = document.getElementById("guest-desc").value.trim();
+      const room = document.getElementById("guest-room").value.trim();
+
+      btn.classList.add("sending");
+      setGuestStatus("📍 Getting your location…", "loading");
+
+      const coords = await getCoords();
+
+      setGuestStatus("Sending emergency alert…", "loading");
+
+      try {
+        const currentPressCount = panicCount + 1;
+        await addDoc(collection(db, "emergencies"), {
+          type: desc || "Panic alert",
+          description: desc || "No description provided",
+          room: room || "Unknown",
+          status: "active",
+          role: "guest",
+          severity: "critical",
+          latitude: coords ? coords.latitude : null,
+          longitude: coords ? coords.longitude : null,
+          gpsAccuracy: coords ? coords.accuracy : null,
+          locationKnown: coords !== null,
+          timestamp: serverTimestamp(),
+          source: "guest-panic",
+          pressCount: currentPressCount,
+          repeatAlert: currentPressCount > 1
+        });
+        const locMsg = coords
+          ? `📍 Location captured (±${coords.accuracy}m)`
+          : "⚠ Location unavailable — still reported";
+        setGuestStatus(`✓ Emergency reported. Help is on the way. ${locMsg}`, "success");
+        document.getElementById("guest-desc").value = "";
+        document.getElementById("guest-room").value = "";
+
+        panicCount++;
+        if (panicCount >= 3) {
+          btn.classList.add("max-alerts");
+          const label = document.getElementById("panic-limit-label");
+          label.textContent = "Maximum alerts sent. Staff have been notified.";
+          label.classList.add("show");
+        }
+      } catch (e) {
+        console.error(e);
+        setGuestStatus("Failed to send. Check connection and try again.", "error");
+      } finally {
+        btn.classList.remove("sending");
+        if (panicCount < 3) {
+          btn.classList.add("cooldown");
+          const label = document.getElementById("panic-limit-label");
+          let timeLeft = 60;
+          label.textContent = `Wait ${timeLeft}s before sending another alert`;
+          label.classList.add("show");
+
+          cooldownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+              clearInterval(cooldownInterval);
+              cooldownInterval = null;
+              if (!btn.classList.contains("max-alerts")) {
+                btn.classList.remove("cooldown");
+                label.classList.remove("show");
+              }
+            } else {
+              label.textContent = `Wait ${timeLeft}s before sending another alert`;
+            }
+          }, 1000);
+        }
+      }
+    };
+
+    /* ── QUICK FILL ── */
+    window.quickFill = function (text) {
+      document.getElementById("guest-desc").value = text;
+    };
+
+    /* ── LOAD EMERGENCIES (Staff) ── */
+    window.loadEmergencies = function () {
+      const listEl = document.getElementById("emergency-list");
+      listEl.innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading emergencies…</div>';
+
+      if (unsubscribe) unsubscribe();
+
+      const q = query(collection(db, "emergencies"), orderBy("timestamp", "desc"));
+
+      unsubscribe = onSnapshot(q, (snap) => {
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderEmergencies(docs);
+      }, (err) => {
+        console.error(err);
+        listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div>Error loading data. Check Firebase config.</div>`;
+      });
+    };
+
+    function renderEmergencies(docs) {
+      const listEl = document.getElementById("emergency-list");
+      const active = docs.filter(d => d.status === "active");
+      const resolved = docs.filter(d => d.status === "resolved");
+
+      const activeCount = active.length;
+      const totalCount = docs.length;
+      const resolvedCount = resolved.length;
+
+      animateTicker(document.getElementById("stat-active"), prevActive, activeCount, 800);
+      animateTicker(document.getElementById("stat-total"), prevTotal, totalCount, 800);
+      animateTicker(document.getElementById("stat-resolved"), prevResolved, resolvedCount, 800);
+
+      prevActive = activeCount;
+      prevTotal = totalCount;
+      prevResolved = resolvedCount;
+
+      targetColorT = active.some(d => d.severity === "critical") ? 1 : 0;
+
+      if (!docs.length) {
+        listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div>No emergencies reported. All clear.</div>';
+        return;
+      }
+
+      listEl.innerHTML = docs.map((d, i) => emergencyCard(d, i)).join("");
+      startElapsedTimer();
+    }
+
+    function formatElapsed(date) {
+      const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+      if (secs < 60) return "just now";
+      const mins = Math.floor(secs / 60);
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      const remainingMins = mins % 60;
+      return `${hrs}h ${remainingMins}m ago`;
+    }
+
+    function emergencyCard(d, index) {
+      const ts = d.timestamp instanceof Timestamp ? d.timestamp.toDate() : new Date();
+      const tsVal = ts.getTime();
+      const timeStr = ts.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const dateStr = ts.toLocaleDateString([], { month: "short", day: "numeric" });
+      const ago = formatElapsed(ts);
+      const isResolved = d.status === "resolved";
+      const isNew = !isResolved && (Date.now() - ts.getTime()) < 60000;
+      const sev = isResolved ? "sev-resolved" : (d.severity === "critical" ? "sev-critical" : "sev-high");
+      const sevLabel = isResolved ? "Resolved" : (d.severity === "critical" ? "Critical" : "High");
+      const repeatBadge = d.repeatAlert ? `<span class="ec-badge repeat">⚠ Repeat Alert #${d.pressCount}</span>` : "";
+      const elapsedColor = isResolved ? "var(--text-3)" : "#9aa0aa";
+
+      const locationHTML = d.locationKnown
+        ? `<div class="ec-location">
+         <span>📍</span>
+         <a href="https://www.google.com/maps?q=${d.latitude},${d.longitude}" target="_blank" class="ec-loc-link">View on Maps</a>
+         <span class="ec-loc-coords">${d.latitude.toFixed(5)}, ${d.longitude.toFixed(5)}</span>
+         <span class="ec-loc-acc">±${d.gpsAccuracy}m</span>
+       </div>`
+        : `<div class="ec-location ec-loc-none">📍 Location not available</div>`;
+
+      return `
+    <div class="ec ${sev}" id="card-${d.id}" style="--delay: ${index * 90}ms">
+      <div class="ec-header">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="ec-badge ${sev}">${sevLabel}</span>
+          ${repeatBadge}
+          ${isNew ? '<span class="ec-new-pill">NEW</span>' : ""}
+          <span class="ec-meta">Room <strong>${escHtml(d.room || "Unknown")}</strong> &nbsp;·&nbsp; ${escHtml(d.type || d.source || "Panic alert")} &nbsp;·&nbsp; <span class="ec-elapsed" id="elapsed-${d.id}" data-ts="${tsVal}" style="color: ${elapsedColor}">${ago}</span></span>
+        </div>
+      </div>
+      <div class="ec-body">
+        <div class="ec-desc">${escHtml(d.description || "No description provided")}</div>
+        ${locationHTML}
+        <div class="ec-divider"></div>
+        <div class="ec-actions">
+          <button class="btn-resolve" ${isResolved ? "disabled" : ""} onclick="resolveEmergency('${d.id}')">
+            ${isResolved ? "✓ Resolved" : "✓ Mark Resolved"}
+          </button>
+          <button class="btn-escalate" ${isResolved ? "disabled" : ""} onclick="escalateEmergency('${d.id}')">
+            ⬆ Escalate
+          </button>
+          <span class="ec-timestamp">${dateStr} · ${timeStr}</span>
+        </div>
+      </div>
+    </div>`;
+    }
+
+    /* ── RESOLVE ── */
+    window.resolveEmergency = async function (id) {
+      try {
+        await updateDoc(doc(db, "emergencies", id), { status: "resolved", severity: "resolved" });
+      } catch (e) { console.error(e); alert("Failed to update. " + e.message); }
+    };
+
+    /* ── ESCALATE ── */
+    window.escalateEmergency = async function (id) {
+      try {
+        await updateDoc(doc(db, "emergencies", id), { severity: "critical", escalated: true });
+      } catch (e) { console.error(e); alert("Failed to escalate. " + e.message); }
+    };
+
+    /* ── HELPERS ── */
+    function showScreen(id) {
+      const current = document.querySelector(".screen.active");
+      const next = document.getElementById(id);
+      if (current === next) return;
+
+      if (current) {
+        gsap.to(current, {
+          opacity: 0, y: -20, duration: 0.3, ease: "power2.in", onComplete: () => {
+            current.classList.remove("active");
+            if (next) {
+              next.classList.add("active");
+              gsap.fromTo(next, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "elastic.out(1, 0.8)" });
+            }
+          }
+        });
+      } else if (next) {
+        next.classList.add("active");
+        gsap.fromTo(next, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "elastic.out(1, 0.8)" });
+      }
+
+      if (id === "staff-screen") startClock();
+      else stopClock();
+
+      targetColorT = 0;
+    }
+
+    function setGuestStatus(msg, type) {
+      const el = document.getElementById("guest-status");
+      el.textContent = msg;
+      el.className = "status-bar" + (type ? " show " + type : "");
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    /* Allow Enter key in PIN field */
+    document.getElementById("staff-pin").addEventListener("keydown", e => {
+      if (e.key === "Enter") window.doLogin();
+    });
+
+    /* ── 3D EMERGENCY BACKGROUND (Three.js) ── */
+    function initThreeJS() {
+      const container = document.getElementById('three-container');
+      if (!container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 50;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Floating Shapes
+      const shapes = [];
+      const geometries = [
+        new THREE.IcosahedronGeometry(2, 0),
+        new THREE.OctahedronGeometry(2, 0)
+      ];
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        emissive: 0x881100,
+        emissiveIntensity: 0.2,
+        roughness: 0.8,
+        metalness: 0.2,
+        wireframe: true
+      });
+
+      for (let i = 0; i < 15; i++) {
+        const mesh = new THREE.Mesh(geometries[Math.floor(Math.random() * geometries.length)], material.clone());
+        mesh.position.set(
+          (Math.random() - 0.5) * 100,
+          (Math.random() - 0.5) * 80,
+          (Math.random() - 0.5) * 50 - 20
+        );
+        mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        mesh.userData = {
+          rx: (Math.random() - 0.5) * 0.02,
+          ry: (Math.random() - 0.5) * 0.02,
+          dy: (Math.random() - 0.5) * 0.05
+        };
+        scene.add(mesh);
+        shapes.push(mesh);
+      }
+
+      // Glowing Particle Field
+      const particleCount = 200;
+      const positions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount * 3; i++) {
+        positions[i] = (Math.random() - 0.5) * 150;
+      }
+      const particleGeo = new THREE.BufferGeometry();
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const particleMat = new THREE.PointsMaterial({
+        color: 0xff4422,
+        size: 0.5,
+        transparent: true,
+        opacity: 0.6
+      });
+      const particles = new THREE.Points(particleGeo, particleMat);
+      scene.add(particles);
+
+      // Dynamic Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+      scene.add(ambientLight);
+
+      const pointLight1 = new THREE.PointLight(0xff3300, 2, 100);
+      scene.add(pointLight1);
+
+      const pointLight2 = new THREE.PointLight(0xff8800, 1.5, 100);
+      scene.add(pointLight2);
+
+      let time = 0;
+      let reqId;
+
+      function animate() {
+        reqId = requestAnimationFrame(animate);
+
+        if (isLowData) {
+          return; // Skip rendering entirely if Low Data mode is on
+        }
+
+        time += 0.01;
+
+        const isCritical = (typeof targetColorT !== 'undefined' && targetColorT > 0.5);
+        const speed = isCritical ? 3 : 1;
+
+        shapes.forEach(shape => {
+          shape.rotation.x += shape.userData.rx * speed;
+          shape.rotation.y += shape.userData.ry * speed;
+          shape.position.y += shape.userData.dy * speed;
+
+          if (shape.position.y > 50) shape.position.y = -50;
+          if (shape.position.y < -50) shape.position.y = 50;
+
+          if (isCritical) {
+            shape.material.emissiveIntensity = 0.5 + Math.sin(time * 5) * 0.3;
+            shape.material.emissive.setHex(0xff2200);
+          } else {
+            shape.material.emissiveIntensity = 0.2;
+            shape.material.emissive.setHex(0x881100);
+          }
+        });
+
+        particles.rotation.y = time * 0.05 * speed;
+
+        pointLight1.position.x = Math.sin(time * 0.5) * 40;
+        pointLight1.position.y = Math.cos(time * 0.3) * 40;
+
+        pointLight2.position.x = Math.cos(time * 0.4) * 40;
+        pointLight2.position.y = Math.sin(time * 0.6) * 40;
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", initThreeJS);
+
+  </script>
+</body>
+
+</html>
